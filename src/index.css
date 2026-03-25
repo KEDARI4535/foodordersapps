@@ -1,0 +1,24 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #ADEBAD;
+  --color-primary-dark: #0f9d58;
+  --color-bg-main: #f6fff6;
+}
+
+body {
+  background-color: var(--color-bg-main);
+  font-family: 'Inter', sans-serif;
+}
+
+.food-card {
+  @apply bg-white rounded-2xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-md;
+}
+
+.category-card {
+  @apply flex flex-col items-center p-4 rounded-2xl bg-white shadow-sm transition-all duration-300 hover:bg-primary/20 cursor-pointer;
+}
+
+.btn-primary {
+  @apply bg-primary-dark text-white px-4 py-2 rounded-lg font-semibold transition-all hover:bg-primary-dark/90 active:scale-95;
+}

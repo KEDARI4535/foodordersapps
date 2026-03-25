@@ -1,0 +1,7 @@
+{
+  "name": "FooDo",
+  "description": "A real-time food delivery application with live tracking, OTP verification, and restaurant management.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

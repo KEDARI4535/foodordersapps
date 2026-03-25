@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user profile information and roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["customer", "delivery", "owner", "admin"] },
+        "phoneNumber": { "type": "string" },
+        "isOnline": { "type": "boolean" }
+      },
+      "required": ["uid", "displayName", "email", "role"]
+    },
+    "Restaurant": {
+      "title": "Restaurant",
+      "description": "Stores restaurant details and menu.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "cuisine": { "type": "string" },
+        "rating": { "type": "number" },
+        "image": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "lat": { "type": "number" },
+            "lng": { "type": "number" }
+          }
+        },
+        "city": { "type": "string" },
+        "state": { "type": "string" },
+        "menu": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "price": { "type": "number" },
+              "description": { "type": "string" },
+              "image": { "type": "string" }
+            }
+          }
+        },
+        "ownerUid": { "type": "string" }
+      },
+      "required": ["name", "cuisine", "image", "location", "menu"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Stores order details and status.",
+      "type": "object",
+      "properties": {
+        "customerUid": { "type": "string" },
+        "restaurantId": { "type": "string" },
+        "items": { "type": "array" },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["placed", "preparing", "out_for_delivery", "delivered"] },
+        "otp": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "customerLocation": { "type": "object" },
+        "restaurantLocation": { "type": "object" },
+        "deliveryLocation": { "type": "object" },
+        "deliveryAgentUid": { "type": "string" },
+        "deliveryPhone": { "type": "string" },
+        "rating": { "type": "number" }
+      },
+      "required": ["customerUid", "restaurantId", "items", "total", "status", "otp", "createdAt"]
+    },
+    "AppNotification": {
+      "title": "Notification",
+      "description": "Stores user notifications.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "orderId": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profile document."
+    },
+    "/restaurants/{restaurantId}": {
+      "schema": "Restaurant",
+      "description": "Restaurant document."
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Order document."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "AppNotification",
+      "description": "Notification document."
+    }
+  }
+}
