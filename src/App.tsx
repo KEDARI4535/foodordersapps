@@ -32,6 +32,7 @@ import { auth, db, firebaseApiKey } from './firebase';
 import { Restaurant, Order, UserProfile, MenuItem, OrderStatus, AppNotification } from './types';
 import { GoogleGenAI } from "@google/genai";
 import RestaurantMap from './components/RestaurantMap';
+import AISearch from './components/AISearch';
 import { 
   ShoppingBag, 
   MapPin, 
@@ -395,9 +396,6 @@ export default function App() {
   const [deliveryOrders, setDeliveryOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const { location: userLocation, error: locationError, loading: isLocating, getLocation: getUserLocation, setLocation: setUserLocation } = useLocation();
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
@@ -708,51 +706,11 @@ export default function App() {
     const matchesCategory = !selectedCategory || 
       res.cuisine.toLowerCase().includes(selectedCategory.replace('_', ' ')) ||
       (res.foodCategory && res.foodCategory.toLowerCase() === selectedCategory.toLowerCase());
-    
-    const query = searchQuery.toLowerCase();
-    const matchesQuery = !query || 
-      res.name.toLowerCase().includes(query) || 
-      res.menu.some(item => item.name.toLowerCase().includes(query));
       
-    return matchesCategory && matchesQuery;
+    return matchesCategory;
   });
 
   const city = userLocation?.city;
-  const hookIsLocating = isLocating;
-
-  const handleGeminiSearch = async () => {
-    if (!searchQuery.trim()) return;
-    setIsSearching(true);
-    setSearchResults([]);
-
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: searchQuery,
-        config: {
-          tools: [{ googleMaps: {} }],
-          toolConfig: {
-            retrievalConfig: {
-              latLng: userLocation ? { latitude: userLocation.lat, longitude: userLocation.lng } : { latitude: 17.3850, longitude: 78.4867 }
-            }
-          }
-        },
-      });
-
-      const chunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
-      if (chunks) {
-        setSearchResults(chunks.filter((c: any) => c.maps).map((c: any) => c.maps));
-      } else {
-        toast('No results found from Google Maps');
-      }
-    } catch (error) {
-      console.error('Search error:', error);
-      toast.error('Failed to search nearby');
-    } finally {
-      setIsSearching(false);
-    }
-  };
 
   const addToCart = (item: MenuItem) => {
     setCart(prev => {
@@ -911,73 +869,8 @@ export default function App() {
               exit={{ opacity: 0, y: -20 }}
             >
               {/* Search Bar */}
-              <div className="mb-12 max-w-3xl mx-auto">
-                <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
-                  </div>
-                  <input
-                    type="text"
-                    className="block w-full pl-12 pr-32 py-5 bg-white border border-slate-200 rounded-3xl shadow-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-lg"
-                    placeholder="FooDo"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleGeminiSearch()}
-                  />
-                  <button
-                    onClick={handleGeminiSearch}
-                    disabled={isSearching}
-                    className="absolute right-3 top-3 bottom-3 px-6 bg-emerald-500 text-white rounded-2xl font-bold hover:bg-emerald-600 disabled:opacity-50 transition-all flex items-center gap-2"
-                  >
-                    {isSearching ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                    Search
-                  </button>
-                </div>
-                <p className="mt-3 text-center text-sm text-slate-400 font-medium flex items-center justify-center gap-2">
-                  <Sparkles className="w-3 h-3 text-emerald-500" />
-                  AI-powered search for nearby restaurants
-                </p>
-
-                {/* Search Results from Google Maps */}
-                <AnimatePresence>
-                  {searchResults.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="mt-4 bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden z-20 relative"
-                    >
-                      <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
-                        <span className="text-sm font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
-                          <MapIcon className="w-4 h-4" />
-                          Nearby from Google Maps
-                        </span>
-                        <button onClick={() => setSearchResults([])} className="text-slate-400 hover:text-slate-600 p-1">
-                          <X className="w-5 h-5" />
-                        </button>
-                      </div>
-                      <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
-                        {searchResults.map((result, idx) => (
-                          <a
-                            key={idx}
-                            href={result.uri}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-between p-5 hover:bg-slate-50 transition-colors group"
-                          >
-                            <div className="flex-1 pr-4">
-                              <h4 className="font-bold text-slate-900 group-hover:text-emerald-600 transition-colors text-lg">{result.title}</h4>
-                              <p className="text-sm text-slate-500 truncate">{result.uri}</p>
-                            </div>
-                            <div className="bg-slate-100 p-2 rounded-full group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-all">
-                              <ChevronRight className="w-5 h-5" />
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="mb-12">
+                <AISearch />
               </div>
 
               {/* Categories */}
@@ -1019,7 +912,7 @@ export default function App() {
                     {selectedCategory ? `${categories.find(c => c.id === selectedCategory)?.name} Restaurants` : 'Popular Restaurants'}
                   </h1>
                   <p className="text-slate-500">
-                    {searchQuery ? `Showing results for "${searchQuery}"` : 'Discover the best food in your area'}
+                    Discover the best food in your area
                   </p>
                 </div>
                 
