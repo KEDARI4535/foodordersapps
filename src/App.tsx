@@ -933,6 +933,10 @@ export default function App() {
                     Search
                   </button>
                 </div>
+                <p className="mt-3 text-center text-sm text-slate-400 font-medium flex items-center justify-center gap-2">
+                  <Sparkles className="w-3 h-3 text-emerald-500" />
+                  AI-powered search for nearby restaurants
+                </p>
 
                 {/* Search Results from Google Maps */}
                 <AnimatePresence>
